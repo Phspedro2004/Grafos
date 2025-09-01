@@ -165,7 +165,8 @@ inline int** adicionarVertice(int** mat, int& qntV) {
     return nova;
 }
 
-inline int** removerVertice(int** mat, int& qntV) {
+// --- Remover vértice ---
+inline int** removerVertice(int** mat, int& qntV, vector<string>& rotulos) {
     if (qntV <= 1) { cout << "Não é possível remover mais vértices.\n"; return mat; }
 
     int v;
@@ -184,55 +185,79 @@ inline int** removerVertice(int** mat, int& qntV) {
         ni++;
     }
     liberarMatriz(mat, qntV);
+    rotulos.erase(rotulos.begin() + (v-1));  // <<< só isso
     qntV = novoV;
     cout << "Vértice removido! Agora são " << qntV << " vértices.\n";
     return nova;
 }
 
+
 // ---------------- Fecho Transitivo ----------------
-inline void fechoTransitivoDireto(int** mat, int qntV) {
-    int v;
-    cout << "Digite o vértice inicial: ";
-    cin >> v;
-    if (v < 1 || v > qntV) { cout << "Vértice inválido!\n"; return; }
-    int inicio = v - 1;
+template <typename T>
+void fechoTransitivoDireto(int** mat, int qntV, const vector<T>& rotulos) {
+    T vLabel;
+    cout << "Digite o vértice inicial (rótulo): ";
+    cin >> vLabel;
+    int inicio = buscarIndice(rotulos, vLabel);
+    if (inicio == -1) { cout << "Vértice inválido!\n"; return; }
+
     bool* visitado = new bool[qntV]();
     int* nivel = new int[qntV];
     for (int i = 0; i < qntV; i++) nivel[i] = -1;
 
     Fila<int> f; inicializarFila(f);
-    inserirFila(f, inicio); visitado[inicio] = true; nivel[inicio] = 0;
+    inserirFila(f, inicio); 
+    visitado[inicio] = true; 
+    nivel[inicio] = 0;
 
-    cout << "\nFecho transitivo direto do vértice " << v << ":\nVértice (Nível)\n----------------\n";
+    cout << "\nFecho transitivo direto de " << rotulos[inicio] << ":\n";
+    cout << "Vértice (Nível)\n----------------\n";
+
     while (!filaVazia(f)) {
         int u; retirarFila(f, u);
-        cout << u+1 << " (" << nivel[u] << ")\n";
-        for (int i = 0; i < qntV; i++)
-            if (mat[u][i] == 1 && !visitado[i]) { inserirFila(f,i); visitado[i]=true; nivel[i]=nivel[u]+1; }
+        cout << rotulos[u] << " (" << nivel[u] << ")\n";
+        for (int i = 0; i < qntV; i++) {
+            if (mat[u][i] == 1 && !visitado[i]) {
+                inserirFila(f, i);
+                visitado[i] = true;
+                nivel[i] = nivel[u] + 1;
+            }
+        }
     }
     cout << "----------------\n";
     delete[] visitado; delete[] nivel;
 }
 
-inline void fechoTransitivoInverso(int** mat, int qntV) {
-    int v;
-    cout << "Digite o vértice inicial: ";
-    cin >> v;
-    if (v < 1 || v > qntV) { cout << "Vértice inválido!\n"; return; }
-    int inicio = v - 1;
+template <typename T>
+void fechoTransitivoInverso(int** mat, int qntV, const vector<T>& rotulos) {
+    T vLabel;
+    cout << "Digite o vértice inicial (rótulo): ";
+    cin >> vLabel;
+    int inicio = buscarIndice(rotulos, vLabel);
+    if (inicio == -1) { cout << "Vértice inválido!\n"; return; }
+
     bool* visitado = new bool[qntV]();
     int* nivel = new int[qntV];
     for (int i = 0; i < qntV; i++) nivel[i] = -1;
 
     Fila<int> f; inicializarFila(f);
-    inserirFila(f, inicio); visitado[inicio]=true; nivel[inicio]=0;
+    inserirFila(f, inicio);
+    visitado[inicio] = true; 
+    nivel[inicio] = 0;
 
-    cout << "\nFecho transitivo inverso do vértice " << v << ":\nVértice (Nível)\n----------------\n";
-    while(!filaVazia(f)) {
-        int u; retirarFila(f,u);
-        cout << u+1 << " (" << nivel[u] << ")\n";
-        for(int i=0;i<qntV;i++)
-            if(mat[i][u]==1 && !visitado[i]) { inserirFila(f,i); visitado[i]=true; nivel[i]=nivel[u]+1; }
+    cout << "\nFecho transitivo inverso de " << rotulos[inicio] << ":\n";
+    cout << "Vértice (Nível)\n----------------\n";
+
+    while (!filaVazia(f)) {
+        int u; retirarFila(f, u);
+        cout << rotulos[u] << " (" << nivel[u] << ")\n";
+        for (int i = 0; i < qntV; i++) {
+            if (mat[i][u] == 1 && !visitado[i]) {
+                inserirFila(f, i);
+                visitado[i] = true;
+                nivel[i] = nivel[u] + 1;
+            }
+        }
     }
     cout << "----------------\n";
     delete[] visitado; delete[] nivel;
@@ -270,7 +295,8 @@ inline void DFS_scc(int v, int** mat, int qntV, bool* visitado, vector<int>& com
         if(mat[v][i]==1 && !visitado[i]) DFS_scc(i, mat, qntV, visitado, componente);
 }
 
-inline void encontrarComponentesFortementeConexos(int** mat, int qntV) {
+// --- SCCs ---
+inline void encontrarComponentesFortementeConexos(int** mat, int qntV, const vector<string>& rotulos) {
     bool* visitado = new bool[qntV]();
     vector<int> pilha;
     for(int i=0;i<qntV;i++) if(!visitado[i]) preencherOrdem(i, mat, qntV, visitado, pilha);
@@ -284,7 +310,7 @@ inline void encontrarComponentesFortementeConexos(int** mat, int qntV) {
         if(!visitado[v]) {
             vector<int> comp;
             DFS_scc(v, trans, qntV, visitado, comp);
-            for(int x: comp) cout << x+1 << " ";
+            for(int x: comp) cout << rotulos[x] << " ";
             cout << "\n";
         }
     }

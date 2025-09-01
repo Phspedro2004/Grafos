@@ -108,7 +108,7 @@ int main() {
                 removerAresta(g.mat, g.qntV, g.dirigido, g.rotulos);
                 break;
             case 8:
-                g.mat = removerVertice(g.mat, g.qntV);
+                g.mat = removerVertice(g.mat, g.qntV, g.rotulos);
                 g.rotulos.pop_back(); // remove rótulo correspondente
                 break;
             case 9:
@@ -124,10 +124,10 @@ int main() {
                 for (int i = 0; i < g.qntV; i++) cin >> g.rotulos[i];
                 break;
             case 10:
-                fechoTransitivoDireto(g.mat, g.qntV);
+                fechoTransitivoDireto(g.mat, g.qntV, g.rotulos);
                 break;
             case 11:
-                fechoTransitivoInverso(g.mat, g.qntV);
+                fechoTransitivoInverso(g.mat, g.qntV, g.rotulos);
                 break;
             case 12:
                 if (!g.dirigido) {
@@ -136,7 +136,7 @@ int main() {
                     else
                         cout << "O grafo NÃO é conexo.\n";
                 } else {
-                    encontrarComponentesFortementeConexos(g.mat, g.qntV);
+                    encontrarComponentesFortementeConexos(g.mat, g.qntV, g.rotulos);
                 }
                 break;
             case 0:
