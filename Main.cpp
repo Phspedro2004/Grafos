@@ -1,28 +1,67 @@
 #include <iostream>
 #include <locale.h>
 #include <limits>
+#include <vector>
+#include <string>
 #include "grafo.h"
 #include "funcoes.h"
 using namespace std;
 
+// Função para limpar tela
+void limparTela() {
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
+
+// Função para pausar tela
+void pausar() {
+    cout << "\nPressione Enter para continuar...";
+    cin.ignore();
+    cin.get();
+}
+
+// Função para ler opção com validação
+int lerOpcao(int min, int max) {
+    int opcao;
+    while (!(cin >> opcao) || opcao < min || opcao > max) {
+        cout << "Opção inválida! Digite um número entre " << min << " e " << max << ": ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // limpar buffer
+    return opcao;
+}
+
 int main() {
     setlocale(LC_ALL, "Portuguese");
 
-    int qntV, dirigido;
+    Grafo<string> g;
+
+    // -------------------- Configuração inicial --------------------
     cout << "Insira a quantidade de vértices: ";
-    while (!(cin >> qntV) || qntV <= 0) {
+    while (!(cin >> g.qntV) || g.qntV <= 0) {
         cout << "Entrada inválida! Digite apenas números maiores que 0: ";
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 
     cout << "O grafo é dirigido? (1 = Sim, 0 = Não): ";
-    cin >> dirigido;
-    dirigido = (dirigido == 1) ? 1 : 0;
+    cin >> g.dirigido;
+    g.dirigido = (g.dirigido == 1);
 
-    int** matriz = criarMatriz(qntV);
-    inserirConexoes(matriz, qntV, dirigido);
+    g.mat = criarMatriz(g.qntV);
+    g.rotulos.resize(g.qntV);
 
+    cout << "Digite os rótulos dos vértices:\n";
+    for (int i = 0; i < g.qntV; i++) {
+        cout << "Vértice " << i + 1 << ": ";
+        cin >> g.rotulos[i];
+    }
+
+    // -------------------- Menu principal --------------------
     int opcao;
     do {
         cout << "\n===== MENU =====\n";
@@ -34,51 +73,82 @@ int main() {
         cout << "6. Procurar vértice\n";
         cout << "7. Remover aresta/arco\n";
         cout << "8. Remover vértice\n";
-        cout << "9. Apagar grafo\n";
+        cout << "9. Apagar grafo e redefinir\n";
         cout << "10. Fecho transitivo direto\n";
         cout << "11. Fecho transitivo inverso\n";
-        cout << "12. Verificar se o grafo é conexo / Mostrar componentes\n";
+        cout << "12. Verificar conexidade / componentes fortemente conexos\n";
         cout << "0. Sair\n";
         cout << "Escolha: ";
-        cin >> opcao;
+
+        opcao = lerOpcao(0, 12);
 
         switch (opcao) {
-        case 1: matriz = adicionarVertice(matriz, qntV); break;
-        case 2: adicionarAresta(matriz, qntV, dirigido); break;
-        case 3: imprimirMatriz(matriz, qntV); break;
-        case 4: executarDFS(matriz, qntV); break;
-        case 5: executarBFS(matriz, qntV); break;
-        case 6: procurarVertice(qntV); break;
-        case 7: removerAresta(matriz, qntV, dirigido); break;
-        case 8: matriz = removerVertice(matriz, qntV); break;
-        case 9:
-            liberarMatriz(matriz, qntV);
-            cout << "Digite a nova quantidade de vértices: ";
-            cin >> qntV;
-            cout << "O grafo é dirigido? (1 = Sim, 0 = Não): ";
-            cin >> dirigido;
-            dirigido = (dirigido == 1) ? 1 : 0;
-            matriz = criarMatriz(qntV);
-            inserirConexoes(matriz, qntV, dirigido);
-            cout << "Grafo redefinido com sucesso!\n";
-            break;
-        case 10: fechoTransitivoDireto(matriz, qntV); break;
-        case 11: fechoTransitivoInverso(matriz, qntV); break;
-        case 12:
-            if (!dirigido) {
-                if (ehConexoNaoDirigido(matriz, qntV))
-                    cout << "O grafo é conexo.\n";
-                else
-                    cout << "O grafo NÃO é conexo.\n";
-            } else {
-            encontrarComponentesFortementeConexos(matriz, qntV);
-            }
-        break;
-        case 0: cout << "Saindo...\n"; break;
-        default: cout << "Opção inválida!\n";
+            case 1:
+                g.mat = adicionarVertice(g.mat, g.qntV);
+                g.rotulos.push_back(""); // adicionar rótulo vazio para o novo vértice
+                cout << "Digite o rótulo do novo vértice: ";
+                cin >> g.rotulos.back();
+                break;
+            case 2:
+                adicionarAresta(g.mat, g.qntV, g.dirigido, g.rotulos);
+                break;
+            case 3:
+                imprimirMatriz(g.mat, g.qntV);
+                break;
+            case 4:
+                executarDFS(g.mat, g.qntV, g.rotulos);
+                break;
+            case 5:
+                executarBFS(g.mat, g.qntV, g.rotulos);
+                break;
+            case 6:
+                procurarVertice(g.rotulos);
+                break;
+            case 7:
+                removerAresta(g.mat, g.qntV, g.dirigido, g.rotulos);
+                break;
+            case 8:
+                g.mat = removerVertice(g.mat, g.qntV);
+                g.rotulos.pop_back(); // remove rótulo correspondente
+                break;
+            case 9:
+                liberarMatriz(g.mat, g.qntV);
+                cout << "Digite a nova quantidade de vértices: ";
+                cin >> g.qntV;
+                cout << "O grafo é dirigido? (1 = Sim, 0 = Não): ";
+                cin >> g.dirigido;
+                g.dirigido = (g.dirigido == 1);
+                g.mat = criarMatriz(g.qntV);
+                g.rotulos.resize(g.qntV);
+                cout << "Digite os rótulos dos vértices:\n";
+                for (int i = 0; i < g.qntV; i++) cin >> g.rotulos[i];
+                break;
+            case 10:
+                fechoTransitivoDireto(g.mat, g.qntV);
+                break;
+            case 11:
+                fechoTransitivoInverso(g.mat, g.qntV);
+                break;
+            case 12:
+                if (!g.dirigido) {
+                    if (ehConexoNaoDirigido(g.mat, g.qntV))
+                        cout << "O grafo é conexo.\n";
+                    else
+                        cout << "O grafo NÃO é conexo.\n";
+                } else {
+                    encontrarComponentesFortementeConexos(g.mat, g.qntV);
+                }
+                break;
+            case 0:
+                cout << "Saindo...\n";
+                break;
         }
+
+        pausar();
+        limparTela();
+
     } while (opcao != 0);
 
-    liberarMatriz(matriz, qntV);
+    liberarMatriz(g.mat, g.qntV);
     return 0;
 }
