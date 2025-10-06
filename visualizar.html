@@ -2,88 +2,200 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Visualizador de Grafo</title>
+  <title>Editor de Grafos - Estilo Obsidian</title>
   <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
   <style>
     body {
       margin: 0;
       background-color: #0e0e0e;
-      color: #ccc;
+      color: #ddd;
       font-family: Inter, Arial, sans-serif;
       overflow: hidden;
+      display: flex;
     }
+
+    #sidebar {
+      width: 260px;
+      background-color: #1a1a1a;
+      border-right: 1px solid #333;
+      padding: 15px;
+      transition: width 0.3s ease;
+      overflow: hidden;
+    }
+
+    #sidebar.collapsed {
+      width: 50px;
+    }
+
+    #toggle-btn {
+      background-color: #2a2a2a;
+      color: #ccc;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+      border-radius: 6px;
+      width: 100%;
+      text-align: left;
+    }
+
+    #controls {
+      margin-top: 15px;
+    }
+
+    #controls h3 {
+      margin-top: 10px;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    input, select, button {
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 5px;
+      background-color: #2a2a2a;
+      border: 1px solid #444;
+      color: #ddd;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background-color: #444;
+    }
+
     #mynetwork {
-      width: 100vw;
+      flex: 1;
       height: 100vh;
     }
   </style>
 </head>
 <body>
+  <div id="sidebar">
+    <button id="toggle-btn">☰ Menu</button>
+
+    <div id="controls">
+      <h3>Adicionar Vértice</h3>
+      <input type="text" id="nodeLabel" placeholder="Nome do vértice">
+      <select id="nodeColor">
+        <option value="0">Roxo</option>
+        <option value="1">Rosa</option>
+        <option value="2">Laranja</option>
+        <option value="3">Verde</option>
+        <option value="4">Amarelo</option>
+        <option value="5">Lilás</option>
+        <option value="6">Azul Claro</option>
+      </select>
+      <button id="addNodeBtn">Adicionar</button>
+
+      <h3>Remover Vértice</h3>
+      <input type="number" id="removeNodeId" placeholder="ID do vértice">
+      <button id="removeNodeBtn">Remover</button>
+
+      <h3>Adicionar Conexão</h3>
+      <input type="number" id="fromNode" placeholder="De (ID)">
+      <input type="number" id="toNode" placeholder="Para (ID)">
+      <button id="addEdgeBtn">Conectar</button>
+
+      <h3>Remover Conexão</h3>
+      <input type="number" id="removeFrom" placeholder="De (ID)">
+      <input type="number" id="removeTo" placeholder="Para (ID)">
+      <button id="removeEdgeBtn">Remover Conexão</button>
+    </div>
+  </div>
+
   <div id="mynetwork"></div>
 
   <script>
-    // Cores inspiradas no estilo Obsidian
     const colorPalette = [
-      "#7b6cff", // roxo
-      "#ff6b81", // rosa
-      "#ffa86b", // laranja
-      "#6bffb0", // verde
-      "#f1fa8c", // amarelo
-      "#bd93f9", // lilás
-      "#8be9fd"  // azul claro
+      "#7b6cff", "#ff6b81", "#ffa86b", "#6bffb0",
+      "#f1fa8c", "#bd93f9", "#8be9fd"
     ];
 
-    // Carrega o arquivo JSON gerado pelo programa em C
+    let nodes = new vis.DataSet();
+    let edges = new vis.DataSet();
+    let network;
+    let nextId = 0;
+
     fetch("grafo.json")
       .then(response => response.json())
       .then(data => {
-        const nodes = new vis.DataSet(
-          data.vertices.map(v => ({
+        data.vertices.forEach(v => {
+          nodes.add({
             id: v.id,
             label: v.label,
-            color: colorPalette[v.color % colorPalette.length] || "#ccc",
+            color: colorPalette[v.color % colorPalette.length],
             shape: "dot",
             size: 15
-          }))
-        );
+          });
+          nextId = Math.max(nextId, v.id + 1);
+        });
 
-        const edges = new vis.DataSet(
-          data.arestas.map(a => ({
-            from: a.from,
-            to: a.to,
-            color: { color: "#444" },
-            width: 1
-          }))
-        );
+        data.arestas.forEach(a => edges.add(a));
 
         const container = document.getElementById("mynetwork");
-        const networkData = { nodes, edges };
         const options = {
           nodes: {
-            font: { color: "#ddd", size: 18 },
+            font: { color: "#ddd", size: 16 },
             borderWidth: 1,
             shadow: true
           },
           edges: {
+            color: "#555",
             smooth: { type: "continuous" },
             width: 1
           },
           physics: {
             stabilization: false,
-            barnesHut: {
-              gravitationalConstant: -5000,
-              centralGravity: 0.3,
-              springLength: 150
-            }
+            barnesHut: { gravitationalConstant: -5000, centralGravity: 0.3, springLength: 150 }
           },
           interaction: { hover: true }
         };
-
-        new vis.Network(container, networkData, options);
-      })
-      .catch(err => {
-        console.error("Erro ao carregar o grafo:", err);
+        network = new vis.Network(container, { nodes, edges }, options);
       });
+
+    // -------- Funções --------
+    document.getElementById("addNodeBtn").onclick = () => {
+      const label = document.getElementById("nodeLabel").value.trim();
+      const colorIdx = parseInt(document.getElementById("nodeColor").value);
+      if (label) {
+        nodes.add({
+          id: nextId,
+          label,
+          color: colorPalette[colorIdx],
+          shape: "dot",
+          size: 15
+        });
+        nextId++;
+        document.getElementById("nodeLabel").value = "";
+      }
+    };
+
+    document.getElementById("removeNodeBtn").onclick = () => {
+      const id = parseInt(document.getElementById("removeNodeId").value);
+      if (nodes.get(id)) {
+        nodes.remove(id);
+        edges.remove(edges.get().filter(e => e.from === id || e.to === id));
+      }
+    };
+
+    document.getElementById("addEdgeBtn").onclick = () => {
+      const from = parseInt(document.getElementById("fromNode").value);
+      const to = parseInt(document.getElementById("toNode").value);
+      if (nodes.get(from) && nodes.get(to) && from !== to) {
+        edges.add({ from, to, color: "#555", width: 1 });
+      }
+    };
+
+    document.getElementById("removeEdgeBtn").onclick = () => {
+      const from = parseInt(document.getElementById("removeFrom").value);
+      const to = parseInt(document.getElementById("removeTo").value);
+      const edge = edges.get().find(e => e.from === from && e.to === to);
+      if (edge) edges.remove(edge.id);
+    };
+
+    // Toggle sidebar
+    document.getElementById("toggle-btn").onclick = () => {
+      document.getElementById("sidebar").classList.toggle("collapsed");
+    };
   </script>
 </body>
 </html>
