@@ -329,7 +329,7 @@ void colorirGrafo(int** mat, int qntV, const vector<T>& rotulos) {
     vector<int> cor(qntV, -1); // -1 = sem cor
     vector<int> ordem(qntV);
 
-    // Heurística: ordenar por grau decrescente (opcional)
+    //ordenar por grau decrescente 
     for (int i = 0; i < qntV; i++) ordem[i] = i;
     sort(ordem.begin(), ordem.end(), [&](int a, int b) {
         int grauA = 0, grauB = 0;
@@ -360,7 +360,7 @@ void colorirGrafo(int** mat, int qntV, const vector<T>& rotulos) {
 
     cout << "\nTotal de cores usadas: " << coresUsadas << "\n";
 
-    // 🔥 Gera arquivo JSON (para visualização no HTML)
+    // Gera arquivo JSON
     FILE* f = fopen("grafo.json", "w");
     if (f) {
         fprintf(f, "{\n  \"vertices\": [\n");

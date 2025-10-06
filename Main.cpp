@@ -31,7 +31,7 @@ int lerOpcao(int min, int max) {
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
-    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // limpar buffer
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     return opcao;
 }
 
@@ -86,7 +86,7 @@ int main() {
         switch (opcao) {
             case 1:
                 g.mat = adicionarVertice(g.mat, g.qntV);
-                g.rotulos.push_back(""); // adicionar rótulo vazio para o novo vértice
+                g.rotulos.push_back(""); 
                 cout << "Digite o rótulo do novo vértice: ";
                 cin >> g.rotulos.back();
                 break;
@@ -110,7 +110,7 @@ int main() {
                 break;
             case 8:
                 g.mat = removerVertice(g.mat, g.qntV, g.rotulos);
-                g.rotulos.pop_back(); // remove rótulo correspondente
+                g.rotulos.pop_back(); 
                 break;
             case 9:
                 liberarMatriz(g.mat, g.qntV);
