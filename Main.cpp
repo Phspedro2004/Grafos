@@ -77,10 +77,11 @@ int main() {
         cout << "10. Fecho transitivo direto\n";
         cout << "11. Fecho transitivo inverso\n";
         cout << "12. Verificar conexidade / componentes fortemente conexos\n";
+        cout << "13. Colorir grafo (heurística gulosa)\n";
         cout << "0. Sair\n";
         cout << "Escolha: ";
 
-        opcao = lerOpcao(0, 12);
+        opcao = lerOpcao(0, 13);
 
         switch (opcao) {
             case 1:
@@ -138,6 +139,9 @@ int main() {
                 } else {
                     encontrarComponentesFortementeConexos(g.mat, g.qntV, g.rotulos);
                 }
+                break;
+            case 13:
+                colorirGrafo(g.mat, g.qntV, g.rotulos);
                 break;
             case 0:
                 cout << "Saindo...\n";

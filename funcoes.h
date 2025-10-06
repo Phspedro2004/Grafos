@@ -4,6 +4,11 @@
 #include <iostream>
 #include <vector>
 #include "fila.h"
+// ---------------- Coloração de Grafo (Heurística Gulosa) ----------------
+#include <map>
+#include <set>
+#include <algorithm>
+
 using namespace std;
 
 // ---------------- Auxiliar: buscar índice do rótulo ----------------
@@ -316,6 +321,68 @@ inline void encontrarComponentesFortementeConexos(int** mat, int qntV, const vec
     }
     liberarMatriz(trans,qntV);
     delete[] visitado;
+}
+
+//COLORAÇÃO DE GRAFOS/////////////////////////////////////////////
+template <typename T>
+void colorirGrafo(int** mat, int qntV, const vector<T>& rotulos) {
+    vector<int> cor(qntV, -1); // -1 = sem cor
+    vector<int> ordem(qntV);
+
+    // Heurística: ordenar por grau decrescente (opcional)
+    for (int i = 0; i < qntV; i++) ordem[i] = i;
+    sort(ordem.begin(), ordem.end(), [&](int a, int b) {
+        int grauA = 0, grauB = 0;
+        for (int j = 0; j < qntV; j++) {
+            grauA += mat[a][j];
+            grauB += mat[b][j];
+        }
+        return grauA > grauB; // maior grau primeiro
+    });
+
+    int coresUsadas = 0;
+
+    for (int v : ordem) {
+        set<int> coresAdj;
+        for (int i = 0; i < qntV; i++)
+            if (mat[v][i] == 1 || mat[i][v] == 1)
+                if (cor[i] != -1) coresAdj.insert(cor[i]);
+
+        int c = 0;
+        while (coresAdj.count(c)) c++;
+        cor[v] = c;
+        coresUsadas = max(coresUsadas, c + 1);
+    }
+
+    cout << "\n\033[1;35mColoração do Grafo (Heurística Gulosa):\033[0m\n";
+    for (int i = 0; i < qntV; i++)
+        cout << "Vértice " << rotulos[i] << " -> Cor " << cor[i] << "\n";
+
+    cout << "\nTotal de cores usadas: " << coresUsadas << "\n";
+
+    // 🔥 Gera arquivo JSON (para visualização no HTML)
+    FILE* f = fopen("grafo.json", "w");
+    if (f) {
+        fprintf(f, "{\n  \"vertices\": [\n");
+        for (int i = 0; i < qntV; i++) {
+            fprintf(f, "    {\"id\": %d, \"label\": \"%s\", \"color\": %d}%s\n",
+                    i, rotulos[i].c_str(), cor[i], (i == qntV - 1 ? "" : ","));
+        }
+        fprintf(f, "  ],\n  \"arestas\": [\n");
+        bool first = true;
+        for (int i = 0; i < qntV; i++)
+            for (int j = 0; j < qntV; j++)
+                if (mat[i][j] == 1) {
+                    if (!first) fprintf(f, ",\n");
+                    fprintf(f, "    {\"from\": %d, \"to\": %d}", i, j);
+                    first = false;
+                }
+        fprintf(f, "\n  ]\n}\n");
+        fclose(f);
+        cout << "\nArquivo 'grafo.json' gerado para visualização.\n";
+    } else {
+        cout << "Erro ao gerar arquivo JSON!\n";
+    }
 }
 
 #endif // FUNCOES_H

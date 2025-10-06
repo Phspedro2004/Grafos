@@ -1,0 +1,16 @@
+{
+  "vertices": [
+    {"id": 0, "label": "pedro", "color": 0},
+    {"id": 1, "label": "ana", "color": 1},
+    {"id": 2, "label": "marilia", "color": 1},
+    {"id": 3, "label": "rafaela", "color": 1}
+  ],
+  "arestas": [
+    {"from": 0, "to": 1},
+    {"from": 0, "to": 2},
+    {"from": 0, "to": 3},
+    {"from": 1, "to": 0},
+    {"from": 2, "to": 0},
+    {"from": 3, "to": 0}
+  ]
+}

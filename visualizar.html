@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Visualizador de Grafo</title>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #0e0e0e;
+      color: #ccc;
+      font-family: Inter, Arial, sans-serif;
+      overflow: hidden;
+    }
+    #mynetwork {
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="mynetwork"></div>
+
+  <script>
+    // Cores inspiradas no estilo Obsidian
+    const colorPalette = [
+      "#7b6cff", // roxo
+      "#ff6b81", // rosa
+      "#ffa86b", // laranja
+      "#6bffb0", // verde
+      "#f1fa8c", // amarelo
+      "#bd93f9", // lilás
+      "#8be9fd"  // azul claro
+    ];
+
+    // Carrega o arquivo JSON gerado pelo programa em C
+    fetch("grafo.json")
+      .then(response => response.json())
+      .then(data => {
+        const nodes = new vis.DataSet(
+          data.vertices.map(v => ({
+            id: v.id,
+            label: v.label,
+            color: colorPalette[v.color % colorPalette.length] || "#ccc",
+            shape: "dot",
+            size: 15
+          }))
+        );
+
+        const edges = new vis.DataSet(
+          data.arestas.map(a => ({
+            from: a.from,
+            to: a.to,
+            color: { color: "#444" },
+            width: 1
+          }))
+        );
+
+        const container = document.getElementById("mynetwork");
+        const networkData = { nodes, edges };
+        const options = {
+          nodes: {
+            font: { color: "#ddd", size: 18 },
+            borderWidth: 1,
+            shadow: true
+          },
+          edges: {
+            smooth: { type: "continuous" },
+            width: 1
+          },
+          physics: {
+            stabilization: false,
+            barnesHut: {
+              gravitationalConstant: -5000,
+              centralGravity: 0.3,
+              springLength: 150
+            }
+          },
+          interaction: { hover: true }
+        };
+
+        new vis.Network(container, networkData, options);
+      })
+      .catch(err => {
+        console.error("Erro ao carregar o grafo:", err);
+      });
+  </script>
+</body>
+</html>
